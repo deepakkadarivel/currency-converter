@@ -59,11 +59,30 @@ export default {
         });
     }
 
+    function fetchModifiedCurrencyData() {
+      fetch(
+        constants.BASE_URL +
+          "?base=" +
+          currencyData.baseCurrency +
+          "&symbols=" +
+          currencyData.quoteCurrency
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          const exchangeRate = data.rates[currencyData.quoteCurrency];
+          currencyData.exchangeRate = exchangeRate;
+          currencyData.baseAmount = currencyData.amount;
+          currencyData.quoteAmount = currencyData.amount * exchangeRate;
+        });
+    }
+
     function changeBaseCurrency(value) {
       currencyData.baseCurrency = value;
+      fetchModifiedCurrencyData();
     }
     function changeQuoteCurrency(value) {
       currencyData.quoteCurrency = value;
+      fetchModifiedCurrencyData();
     }
     function changeBaseAmount(value) {
       currencyData.baseAmount = value;
