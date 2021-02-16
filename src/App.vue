@@ -78,7 +78,16 @@ export default {
       isLoading.value = true;
       return fetch(constants.BASE_URL)
         .then((res) => res.json())
-        .then((data) => setCurrencyData(data))
+        .then((data) => {
+          const nonBaseCurrencyCodes = Object.keys(data.rates);
+          const firstCurrency = nonBaseCurrencyCodes[0];
+          const exchangeRate = data.rates[firstCurrency];
+
+          currencyData.options = [data.base, ...nonBaseCurrencyCodes];
+          currencyData.baseCurrency = data.base;
+          currencyData.quoteCurrency = firstCurrency;
+          setExchangeRates(exchangeRate);
+        })
         .catch(() => (isError.value = true))
         .then(() => (isLoading.value = false));
     }
@@ -106,17 +115,6 @@ export default {
         currencyData.amount,
         rate
       );
-    }
-
-    function setCurrencyData(data) {
-      const nonBaseCurrencyCodes = Object.keys(data.rates);
-      const firstCurrency = nonBaseCurrencyCodes[0];
-      const exchangeRate = data.rates[firstCurrency];
-
-      currencyData.options = [data.base, ...nonBaseCurrencyCodes];
-      currencyData.baseCurrency = data.base;
-      currencyData.quoteCurrency = firstCurrency;
-      setExchangeRates(exchangeRate);
     }
 
     /* Event handlers for inputs */

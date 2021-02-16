@@ -1,8 +1,8 @@
 <template>
-  <span class="hint">
+  <p class="hint">
     1 {{ fromCurrency }} = <span class="hint-value">{{ exchangeRate }}</span>
     {{ toCurrency }}
-  </span>
+  </p>
 </template>
 
 <script>
@@ -25,10 +25,6 @@ export default {
 </script>
 
 <style scoped>
-span {
-  margin-top: 8px;
-  font-size: 12px;
-}
 .hint {
   margin-top: 8px;
   font-size: 12px;
