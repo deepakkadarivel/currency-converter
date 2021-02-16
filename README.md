@@ -26,31 +26,28 @@
 
 ## Project setup
 ```
-npm install
+yarn install
 ```
 
 ### Compiles and hot-reloads for development
 ```
-npm serve
+yarn serve
 ```
 
 ### Compiles and minifies for production
 ```
-npm build
+yarn build
 ```
 
 ### Lints and fixes files
 ```
-npm lint
+yarn lint
 ```
 ### Run unit tests
 ```
-npm run test:unit
+yarn run test:unit
 ```
 ### Run E2E tests
 ```
-npm run test:e2e
+yarn run test:e2e
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
