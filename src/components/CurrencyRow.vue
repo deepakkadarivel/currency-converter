@@ -1,11 +1,13 @@
 <template>
-  <base-input :value="amount" @onChange="changeAmount" />
-  <base-select
-    v-if="currency"
-    :value="currency"
-    :options="options"
-    @onChange="changeCurrency"
-  />
+  <div>
+    <base-input :value="amount" @onChange="changeAmount" />
+    <base-select
+      v-if="currency"
+      :value="currency"
+      :options="options"
+      @onChange="changeCurrency"
+    />
+  </div>
 </template>
 
 <script>
