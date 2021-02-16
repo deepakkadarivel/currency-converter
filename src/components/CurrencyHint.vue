@@ -8,9 +8,18 @@
 <script>
 export default {
   props: {
-    fromCurrency: String,
-    toCurrency: String,
-    exchangeRate: Number,
+    fromCurrency: {
+      type: String,
+      required: true,
+    },
+    toCurrency: {
+      type: String,
+      required: true,
+    },
+    exchangeRate: {
+      type: Number,
+      required: true,
+    },
   },
 };
 </script>

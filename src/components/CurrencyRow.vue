@@ -11,8 +11,14 @@
 </template>
 
 <script>
+import BaseInput from "./ui/BaseInput";
+import BaseSelect from "./ui/BaseSelect";
 export default {
   emits: ["onChangeCurrency", "onChangeAmount"],
+  components: {
+    BaseInput,
+    BaseSelect,
+  },
   props: {
     options: {
       type: Array,
