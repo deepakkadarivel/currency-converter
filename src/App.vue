@@ -4,18 +4,18 @@
   </header>
   <currency-row
     :options="currencyData.options"
-    :selection="currencyData.baseCurrency"
+    :currency="currencyData.baseCurrency"
+    :amount="currencyData.baseAmount"
     @onChangeCurrency="changeBaseCurrency"
     @onChangeAmount="changeBaseAmount"
-    :amount="currencyData.baseAmount"
   ></currency-row>
   <div>=</div>
   <currency-row
     :options="currencyData.options"
-    :selection="currencyData.quoteCurrency"
+    :currency="currencyData.quoteCurrency"
+    :amount="currencyData.quoteAmount"
     @onChangeCurrency="changeQuoteCurrency"
     @onChangeAmount="changeQuoteAmount"
-    :amount="currencyData.quoteAmount"
   ></currency-row>
 </template>
 
@@ -23,6 +23,7 @@
 import { onMounted, reactive } from "vue";
 import CurrencyRow from "./components/CurrencyRow";
 import constants from "./utils/constants";
+import { formatNumber } from "./utils/formatter";
 
 export default {
   name: "App",
@@ -37,63 +38,69 @@ export default {
       baseCurrency: "",
       quoteCurrency: "",
       amount: 1,
-      isAmountFromBaseInput: true,
       baseAmount: 0,
       quoteAmount: 0,
       exchangeRate: 0,
     });
 
-    function fetchLatestCurrencyData() {
+    function fetchExchangeRates() {
       fetch(constants.BASE_URL)
         .then((res) => res.json())
-        .then((data) => {
-          const nonBaseCurrencyCodes = Object.keys(data.rates);
-          const firstCurrency = nonBaseCurrencyCodes[0];
-          const exchangeRate = data.rates[firstCurrency];
-          currencyData.options = [data.base, ...nonBaseCurrencyCodes];
-          currencyData.baseCurrency = data.base;
-          currencyData.quoteCurrency = firstCurrency;
-          currencyData.exchangeRate = exchangeRate;
-          currencyData.baseAmount = currencyData.amount;
-          currencyData.quoteAmount = currencyData.amount * exchangeRate;
-        });
+        .then((data) => setCurrencyData(data));
     }
 
-    function fetchModifiedCurrencyData() {
-      fetch(
+    onMounted(() => fetchExchangeRates());
+
+    function calculateExchangeRates(rate) {
+      currencyData.exchangeRate = rate;
+      currencyData.baseAmount = formatNumber(currencyData.amount);
+      currencyData.quoteAmount = formatNumber(currencyData.amount * rate);
+    }
+
+    function setCurrencyData(data) {
+      const nonBaseCurrencyCodes = Object.keys(data.rates);
+      const firstCurrency = nonBaseCurrencyCodes[0];
+      const exchangeRate = data.rates[firstCurrency];
+
+      currencyData.options = [data.base, ...nonBaseCurrencyCodes];
+      currencyData.baseCurrency = data.base;
+      currencyData.quoteCurrency = firstCurrency;
+      calculateExchangeRates(exchangeRate);
+    }
+
+    function fetchCurrencyUpdates() {
+      const URL =
         constants.BASE_URL +
-          "?base=" +
-          currencyData.baseCurrency +
-          "&symbols=" +
-          currencyData.quoteCurrency
-      )
+        "?base=" +
+        currencyData.baseCurrency +
+        "&symbols=" +
+        currencyData.quoteCurrency;
+      fetch(URL)
         .then((res) => res.json())
         .then((data) => {
           const exchangeRate = data.rates[currencyData.quoteCurrency];
-          currencyData.exchangeRate = exchangeRate;
-          currencyData.baseAmount = currencyData.amount;
-          currencyData.quoteAmount = currencyData.amount * exchangeRate;
+          calculateExchangeRates(exchangeRate);
         });
     }
 
     function changeBaseCurrency(value) {
       currencyData.baseCurrency = value;
-      fetchModifiedCurrencyData();
+      fetchCurrencyUpdates();
     }
     function changeQuoteCurrency(value) {
       currencyData.quoteCurrency = value;
-      fetchModifiedCurrencyData();
+      fetchCurrencyUpdates();
     }
     function changeBaseAmount(value) {
       currencyData.baseAmount = value;
-      currencyData.quoteAmount = value * currencyData.exchangeRate;
+      currencyData.quoteAmount = formatNumber(
+        value * currencyData.exchangeRate
+      );
     }
     function changeQuoteAmount(value) {
       currencyData.quoteAmount = value;
-      currencyData.baseAmount = value / currencyData.exchangeRate;
+      currencyData.baseAmount = formatNumber(value / currencyData.exchangeRate);
     }
-
-    onMounted(() => fetchLatestCurrencyData());
 
     return {
       currencyData,

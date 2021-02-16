@@ -24,3 +24,18 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.input {
+  padding: 12px 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+.input:active {
+  border: 1px solid #000;
+}
+</style>
