@@ -1,5 +1,5 @@
 <template>
-  <input class="input" type="number" :value="amount" @input="changeAmount" />
+  <base-input :value="amount" @onChange="changeAmount" />
   <select :value="selection" @change="changeCurrency">
     <option v-for="option in options" :key="option">{{ option }}</option>
   </select>
@@ -7,7 +7,9 @@
 
 <script>
 import { ref } from "vue";
+import BaseInput from "./ui/BaseInput.vue";
 export default {
+  components: { BaseInput },
   emits: ["onChangeCurrency", "onChangeAmount"],
   props: {
     options: {
@@ -29,8 +31,8 @@ export default {
       context.emit("onChangeCurrency", e.target.value);
     }
 
-    function changeAmount(e) {
-      context.emit("onChangeAmount", e.target.value);
+    function changeAmount(val) {
+      context.emit("onChangeAmount", val);
     }
 
     return { currencyInput, changeCurrency, changeAmount };
