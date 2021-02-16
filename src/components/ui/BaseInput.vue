@@ -3,6 +3,8 @@
 </template>
 
 <script>
+import { formatNumber, restrictToNumber } from "../../utils/formatter";
+
 export default {
   emits: ["onChange"],
   props: {
@@ -10,10 +12,8 @@ export default {
   },
   setup(_, context) {
     function numberOnly(e) {
-      const val = e.target.value.replace(/[^0-9.]+/g, "");
-      const formattedValue = Number(
-        (Math.floor(val * 10000) / 10000).toFixed(4)
-      );
+      const val = restrictToNumber(e.target.value);
+      const formattedValue = formatNumber(val);
       e.target.value = formattedValue;
       context.emit("onChange", formattedValue);
     }
