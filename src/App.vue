@@ -9,9 +9,8 @@
       <currency-row
         :options="currencyData.options"
         :currency="currencyData.baseCurrency"
-        :amount="currencyData.baseAmount"
         @onChangeCurrency="changeBaseCurrency"
-        @onChangeAmount="changeBaseAmount"
+        v-model:amount="baseAmount"
       ></currency-row>
       <currency-hint
         :fromCurrency="currencyData.baseCurrency"
@@ -24,9 +23,8 @@
       <currency-row
         :options="currencyData.options"
         :currency="currencyData.quoteCurrency"
-        :amount="currencyData.quoteAmount"
         @onChangeCurrency="changeQuoteCurrency"
-        @onChangeAmount="changeQuoteAmount"
+        v-model:amount="quoteAmount"
       ></currency-row>
       <currency-hint
         :fromCurrency="currencyData.quoteCurrency"
@@ -38,7 +36,7 @@
 </template>
 
 <script>
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, watch } from "vue";
 import constants from "./utils/constants";
 import { formatNumber } from "./utils/formatter";
 import {
@@ -58,91 +56,117 @@ export default {
   setup() {
     const isLoading = ref(false);
     const isError = ref(false);
+    const baseAmount = ref(1);
+    const quoteAmount = ref(0);
 
     const currencyData = reactive({
       options: [],
       rates: {},
       baseCurrency: "",
       quoteCurrency: "",
-      amount: 1,
-      baseAmount: 0,
-      quoteAmount: 0,
+      // baseAmount: 1,
+      // quoteAmount: 0,
       exchangeRate: 0,
     });
 
     onMounted(() => fetchExchangeRates());
 
+    watch([baseAmount, quoteAmount], (newValues, oldValues) => {
+      console.log({ newValues });
+      console.log({ oldValues });
+      if (newValues[0] !== oldValues[0]) {
+        quoteAmount.value = calcBaseToQuoteAmount(
+          newValues[0],
+          currencyData.exchangeRate
+        );
+      }
+      if (newValues[1] !== oldValues[1]) {
+        baseAmount.value = calcQuoteToBaseAmount(
+          newValues[1],
+          currencyData.exchangeRate
+        );
+      }
+    });
+
     /* API handlers */
 
-    function fetchExchangeRates() {
+    function fetchExchangeRates(currency = constants.BASE_CURRENCY) {
+      const url = `${constants.BASE_URL}?base=${currency}`;
       isLoading.value = true;
-      return fetch(constants.BASE_URL)
+      return fetch(url)
         .then((res) => res.json())
         .then((data) => {
+          currencyData.rates = data.rates;
           const nonBaseCurrencyCodes = Object.keys(data.rates);
           const firstCurrency = nonBaseCurrencyCodes[0];
           const exchangeRate = data.rates[firstCurrency];
 
-          currencyData.options = [data.base, ...nonBaseCurrencyCodes];
-          currencyData.baseCurrency = data.base;
-          currencyData.quoteCurrency = firstCurrency;
+          if (currency === constants.BASE_CURRENCY) {
+            currencyData.options = [data.base, ...nonBaseCurrencyCodes];
+            currencyData.rates = { ...currencyData.rates, EUR: 1 };
+          } else {
+            currencyData.options = nonBaseCurrencyCodes;
+          }
+          if (currencyData.baseCurrency === "") {
+            currencyData.baseCurrency = data.base;
+          }
+          if (currencyData.quoteCurrency === "") {
+            currencyData.quoteCurrency = firstCurrency;
+          }
           setExchangeRates(exchangeRate);
         })
         .catch(() => (isError.value = true))
         .then(() => (isLoading.value = false));
     }
 
-    function fetchCurrencyUpdates() {
-      const URL =
-        constants.BASE_URL +
-        "?base=" +
-        currencyData.baseCurrency +
-        "&symbols=" +
-        currencyData.quoteCurrency;
-      return fetch(URL)
-        .then((res) => res.json())
-        .then((data) => {
-          const exchangeRate = data.rates[currencyData.quoteCurrency];
-          setExchangeRates(exchangeRate);
-        })
-        .catch(() => (isError.value = true));
-    }
+    // function fetchCurrencyUpdates() {
+    //   const URL =
+    //     constants.BASE_URL +
+    //     "?base=" +
+    //     currencyData.baseCurrency +
+    //     "&symbols=" +
+    //     currencyData.quoteCurrency;
+    //   return fetch(URL)
+    //     .then((res) => res.json())
+    //     .then((data) => {
+    //       const exchangeRate = data.rates[currencyData.quoteCurrency];
+    //       setExchangeRates(exchangeRate);
+    //     })
+    //     .catch(() => (isError.value = true));
+    // }
 
     function setExchangeRates(rate) {
       currencyData.exchangeRate = rate;
-      currencyData.baseAmount = formatNumber(currencyData.amount);
-      currencyData.quoteAmount = calcBaseToQuoteAmount(
-        currencyData.amount,
-        rate
-      );
+      baseAmount.value = formatNumber(baseAmount.value);
+      quoteAmount.value = calcBaseToQuoteAmount(baseAmount.value, rate);
     }
 
     /* Event handlers for inputs */
     function changeBaseCurrency(value) {
       currencyData.baseCurrency = value;
-      fetchCurrencyUpdates();
+      fetchExchangeRates(value);
     }
 
     function changeQuoteCurrency(value) {
       currencyData.quoteCurrency = value;
-      fetchCurrencyUpdates();
+      setExchangeRates(currencyData.rates[value]);
     }
 
-    function changeBaseAmount(value) {
-      currencyData.baseAmount = value;
-      currencyData.quoteAmount = calcBaseToQuoteAmount(
-        value,
-        currencyData.exchangeRate
-      );
-    }
+    // function changeBaseAmount(value) {
+    //   currencyData.baseAmount = value;
+    //   currencyData.quoteAmount = calcBaseToQuoteAmount(
+    //     value,
+    //     currencyData.exchangeRate
+    //   );
+    // }
 
-    function changeQuoteAmount(value) {
-      currencyData.quoteAmount = value;
-      currencyData.baseAmount = calcQuoteToBaseAmount(
-        value,
-        currencyData.exchangeRate
-      );
-    }
+    // function changeQuoteAmount(value) {
+    //   currencyData.quoteAmount = value;
+    //   currencyData.baseAmount = calcQuoteToBaseAmount(
+    //     value,
+    //     currencyData.exchangeRate
+    //   );
+    // }
 
     return {
       isLoading,
@@ -150,10 +174,12 @@ export default {
       currencyData,
       changeBaseCurrency,
       changeQuoteCurrency,
-      changeBaseAmount,
-      changeQuoteAmount,
+      // changeBaseAmount,
+      // changeQuoteAmount,
       calcBaseToQuoteAmount,
       calcQuoteToBaseAmount,
+      baseAmount,
+      quoteAmount,
     };
   },
 };

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <base-input :value="amount" @onChange="changeAmount" />
+    <base-input v-model="inputAmount" />
     <base-select
       v-if="currency"
       :value="currency"
@@ -11,10 +11,11 @@
 </template>
 
 <script>
+import { computed } from "vue";
 import BaseInput from "./ui/BaseInput";
 import BaseSelect from "./ui/BaseSelect";
 export default {
-  emits: ["onChangeCurrency", "onChangeAmount"],
+  emits: ["onChangeCurrency", "update:amount"],
   components: {
     BaseInput,
     BaseSelect,
@@ -33,16 +34,17 @@ export default {
     },
   },
 
-  setup(_, context) {
+  setup(props, context) {
     function changeCurrency(currency) {
       context.emit("onChangeCurrency", currency);
     }
 
-    function changeAmount(amount) {
-      context.emit("onChangeAmount", amount);
-    }
+    const inputAmount = computed({
+      get: () => props.amount,
+      set: (val) => context.emit("update:amount", val),
+    });
 
-    return { changeCurrency, changeAmount };
+    return { changeCurrency, inputAmount };
   },
 };
 </script>

@@ -1,21 +1,21 @@
 <template>
-  <input class="input" type="number" :value="value" @input="numberOnly" />
+  <input class="input" type="number" :value="modelValue" @input="numberOnly" />
 </template>
 
 <script>
 import { formatNumber, restrictToNumber } from "../../utils/formatter";
 
 export default {
-  emits: ["onChange"],
+  emits: ["update:modelValue"],
   props: {
-    value: Number,
+    modelValue: Number,
   },
   setup(_, context) {
     function numberOnly(e) {
       const val = restrictToNumber(e.target.value);
       const formattedValue = formatNumber(val);
       e.target.value = formattedValue;
-      context.emit("onChange", formattedValue);
+      context.emit("update:modelValue", formattedValue);
     }
 
     return {
